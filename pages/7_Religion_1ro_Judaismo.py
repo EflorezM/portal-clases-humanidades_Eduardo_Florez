@@ -5,10 +5,20 @@ import io
 
 st.set_page_config(page_title="Ficha de Religión - El judaísmo", page_icon="📜", layout="centered")
 
-# --- SISTEMA DE TIEMPO INTELIGENTE ---
-if 'inicio_tiempo_religion' not in st.session_state:
-    st.session_state.inicio_tiempo_religion = time.time()
-    st.session_state.minutos_asignados_religion = 20
+# --- SISTEMA DE TIEMPO INTELIGENTE Y BOTÓN GO ---
+if 'ficha_iniciada_religion' not in st.session_state:
+    st.session_state.ficha_iniciada_religion = False
+
+if not st.session_state.ficha_iniciada_religion:
+    st.info("👋 ¡Hola! Tienes 20 minutos para resolver esta ficha. El tiempo comenzará a correr cuando presiones el botón de abajo.")
+    col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
+    with col_btn2:
+        if st.button("🚀 ESTOY LISTO: INICIAR FICHA (GO)", use_container_width=True):
+            st.session_state.ficha_iniciada_religion = True
+            st.session_state.inicio_tiempo_religion = time.time()
+            st.session_state.minutos_asignados_religion = 20
+            st.rerun()
+    st.stop()
 
 segundos_transcurridos = time.time() - st.session_state.inicio_tiempo_religion
 segundos_restantes = (st.session_state.minutos_asignados_religion * 60) - segundos_transcurridos
@@ -33,7 +43,7 @@ with st.sidebar:
         st.error("⚠️ TIEMPO AGOTADO")
         st.write("Tu ficha ha sido bloqueada. Por favor, descarga tu avance en la parte inferior.")
         
-        if st.button("🔓 Desbloquear (Dar 4 min)"):
+        if st.button("🔓 Desbloquear (Dar 4 min extra)"):
             st.session_state.minutos_asignados_religion += 4
             st.rerun()
 # --------------------------------------
