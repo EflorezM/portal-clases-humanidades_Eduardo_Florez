@@ -13,7 +13,7 @@ if not st.session_state.ficha_iniciada_pfrh:
     st.info("👋 ¡Hola! Tienes 20 minutos para resolver esta ficha. El tiempo comenzará a correr cuando presiones el botón de abajo.")
     col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
     with col_btn2:
-        if st.button("🚀 ESTOY LISTO: INICIAR FICHA (GO)", use_container_width=True):
+        if st.button("🚀 ESTOY LISTO: INICIAR FICHA", use_container_width=True):
             st.session_state.ficha_iniciada_pfrh = True
             st.session_state.inicio_tiempo_pfrh = time.time()
             st.session_state.minutos_asignados_pfrh = 20
@@ -39,11 +39,10 @@ with st.sidebar:
         
         st.caption("Actualiza la página (F5) o interactúa con la ficha para ver el tiempo exacto.")
     else:
-        st.error("## 00:00")
-        st.error("⚠️ TIEMPO AGOTADO")
+        st.error("## 00:00\n⚠️ TIEMPO AGOTADO")
         st.write("Tu ficha ha sido bloqueada. Por favor, descarga tu avance en la parte inferior.")
         
-        if st.button("🔓 Desbloquear (Dar 4 min extra)"):
+        if st.button("🔓 Desbloquear (Dar 4 min)"):
             st.session_state.minutos_asignados_pfrh += 4
             st.rerun()
 # --------------------------------------
@@ -92,6 +91,21 @@ q7_1 = st.text_input("Frase de autocuidado 1:", disabled=bloquear_inputs)
 q7_2 = st.text_input("Frase de autocuidado 2:", disabled=bloquear_inputs)
 
 st.markdown("---")
+# --- VALORACIÓN DEL ESTUDIANTE ---
+st.subheader("📊 Valoración de la Actividad")
+val_funcional = st.slider("1. ¿Qué tan fácil y funcional te pareció usar esta ficha digital?", 1, 5, 5, disabled=bloquear_inputs)
+val_interes = st.radio("2. ¿El tema y las actividades te parecieron interesantes?", ["Sí, mucho", "Estuvo bien", "No mucho", "Nada interesante"], horizontal=True, disabled=bloquear_inputs)
+
+st.markdown("---")
+# --- LISTA DE COTEJO PARA EL DOCENTE ---
+st.subheader("📋 Lista de Cotejo (Uso exclusivo del docente)")
+st.caption("Estos son los criterios con los que tu profesor evaluará esta ficha:")
+st.checkbox("Identifica correctamente sus emociones y reacciones físicas (Nivel 1).", value=False, disabled=True)
+st.checkbox("Relaciona asertivamente emoción, pensamiento y respuesta en un caso cotidiano (Nivel 2).", value=False, disabled=True)
+st.checkbox("Reflexiona con profundidad sobre las consecuencias de no gestionar emociones (Nivel 3).", value=False, disabled=True)
+st.checkbox("Propone frases de autocuidado emocional coherentes y positivas (Nivel 3).", value=False, disabled=True)
+
+st.markdown("---")
 
 if st.button("Generar mi Evidencia en Word"):
     if not nombre.strip() or seccion == "":
@@ -106,17 +120,53 @@ if st.button("Generar mi Evidencia en Word"):
         
     else:
         doc = Document()
+        
         doc.add_heading('FICHA DE PFRH – SESIÓN 3° AÑO', level=1)
         doc.add_paragraph(f'Estudiante: {nombre} | Sección: {seccion} | Fecha: {fecha}')
+        if tiempo_agotado:
+            doc.add_paragraph('[Entregado al finalizar el tiempo reglamentario]').bold = True
         doc.add_paragraph('---')
-        doc.add_heading('NIVEL 1', level=2)
-        doc.add_paragraph(f'1) Emoción: {q1}\n2) Cuerpo: {q2}\n3) Pensamiento: {q3}\n4) Expresar: {q4}')
-        doc.add_heading('NIVEL 2', level=2)
-        doc.add_paragraph(f'5) En visto: Emo: {q5_emo} | Pen: {q5_pen} | Res: {q5_res}')
-        doc.add_heading('NIVEL 3', level=2)
-        doc.add_paragraph(f'6) Explotar redes: {q6}\n7) Autocuidado: 1) {q7_1} | 2) {q7_2}')
         
-        if tiempo_agotado: doc.add_paragraph('\n[Entregado al finalizar el tiempo reglamentario]')
+        doc.add_heading('NIVEL 1 (FÁCIL)', level=2)
+        p1 = doc.add_paragraph()
+        p1.add_run('1) Emoción del día:\n').bold = True
+        p1.add_run(f'• {q1}\n\n')
+        p1.add_run('2) Reacción del cuerpo al enojo:\n').bold = True
+        p1.add_run(f'• {q2}\n\n')
+        p1.add_run('3) Pensamiento frecuente:\n').bold = True
+        p1.add_run(f'• {q3}\n\n')
+        p1.add_run('4) Forma respetuosa de canalizar la emoción:\n').bold = True
+        p1.add_run(f'• {q4}')
+        
+        doc.add_heading('NIVEL 2 (MEDIO)', level=2)
+        p2 = doc.add_paragraph()
+        p2.add_run('5) Caso "Me dejan en visto":\n').bold = True
+        p2.add_run(f'• Emoción: {q5_emo}\n')
+        p2.add_run(f'• Pensamiento: {q5_pen}\n')
+        p2.add_run(f'• Respuesta: {q5_res}')
+        
+        doc.add_heading('NIVEL 3 (DIFÍCIL)', level=2)
+        p3 = doc.add_paragraph()
+        p3.add_run('6) Consecuencias de explotar en redes:\n').bold = True
+        p3.add_run(f'• {q6}\n\n')
+        p3.add_run('7) Frases de autocuidado:\n').bold = True
+        p3.add_run(f'• {q7_1}\n• {q7_2}')
+        
+        doc.add_heading('Valoración de la Actividad', level=2)
+        p4 = doc.add_paragraph()
+        p4.add_run('Funcionalidad de la ficha digital: ').bold = True
+        p4.add_run(f'{val_funcional} estrellas\n')
+        p4.add_run('Interés en el tema: ').bold = True
+        p4.add_run(f'{val_interes}')
+        
+        doc.add_page_break()
+        
+        doc.add_heading('Lista de Cotejo - Evaluación del Docente', level=2)
+        doc.add_paragraph('[ ] Identifica correctamente sus emociones y reacciones físicas (Nivel 1).')
+        doc.add_paragraph('[ ] Relaciona asertivamente emoción, pensamiento y respuesta en un caso cotidiano (Nivel 2).')
+        doc.add_paragraph('[ ] Reflexiona con profundidad sobre las consecuencias de no gestionar emociones (Nivel 3).')
+        doc.add_paragraph('[ ] Propone frases de autocuidado emocional coherentes y positivas (Nivel 3).')
+        doc.add_paragraph('\nNota / Observaciones: ________________________________________________')
         
         bio = io.BytesIO()
         doc.save(bio)
@@ -124,4 +174,9 @@ if st.button("Generar mi Evidencia en Word"):
         if not tiempo_agotado: st.balloons()
             
         st.success("¡Tu archivo está listo para entregar!")
-        st.download_button("📥 Descargar .docx", data=bio.getvalue(), file_name=f"Ficha_PFRH_3{seccion}_{nombre.replace(' ', '_')}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        st.download_button(
+            label="📥 Descargar Documento Final (.docx)", 
+            data=bio.getvalue(), 
+            file_name=f"Ficha_PFRH_3{seccion}_{nombre.replace(' ', '_')}.docx", 
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
