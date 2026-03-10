@@ -13,7 +13,7 @@ if not st.session_state.ficha_iniciada_religion:
     st.info("👋 ¡Hola! Tienes 20 minutos para resolver esta ficha. El tiempo comenzará a correr cuando presiones el botón de abajo.")
     col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
     with col_btn2:
-        if st.button("🚀 ESTOY LISTO: INICIAR FICHA (GO)", use_container_width=True):
+        if st.button("🚀 ESTOY LISTO: INICIAR FICHA", use_container_width=True):
             st.session_state.ficha_iniciada_religion = True
             st.session_state.inicio_tiempo_religion = time.time()
             st.session_state.minutos_asignados_religion = 20
@@ -39,11 +39,10 @@ with st.sidebar:
         
         st.caption("Actualiza la página (F5) o interactúa con la ficha para ver el tiempo exacto.")
     else:
-        st.error("## 00:00")
-        st.error("⚠️ TIEMPO AGOTADO")
+        st.error("## 00:00\n⚠️ TIEMPO AGOTADO")
         st.write("Tu ficha ha sido bloqueada. Por favor, descarga tu avance en la parte inferior.")
         
-        if st.button("🔓 Desbloquear (Dar 4 min extra)"):
+        if st.button("🔓 Desbloquear (Dar 4 min)"):
             st.session_state.minutos_asignados_religion += 4
             st.rerun()
 # --------------------------------------
@@ -101,6 +100,22 @@ q8_2 = st.text_input("Acción 2:", disabled=bloquear_inputs)
 q8_3 = st.text_input("Acción 3:", disabled=bloquear_inputs)
 
 st.markdown("---")
+# --- VALORACIÓN DEL ESTUDIANTE ---
+st.subheader("📊 Valoración de la Actividad")
+val_funcional = st.slider("1. ¿Qué tan fácil y funcional te pareció usar esta ficha digital?", 1, 5, 5, disabled=bloquear_inputs)
+val_interes = st.radio("2. ¿El tema y las actividades te parecieron interesantes?", ["Sí, mucho", "Estuvo bien", "No mucho", "Nada interesante"], horizontal=True, disabled=bloquear_inputs)
+
+st.markdown("---")
+# --- LISTA DE COTEJO PARA EL DOCENTE ---
+st.subheader("📋 Lista de Cotejo (Uso exclusivo del docente)")
+st.caption("Estos son los criterios con los que tu profesor evaluará esta ficha:")
+st.checkbox("Reconoce el concepto de monoteísmo y la figura de Abraham adecuadamente (Nivel 1).", value=False, disabled=True)
+st.checkbox("Identifica de manera asertiva semejanzas entre el judaísmo y el cristianismo (Nivel 2).", value=False, disabled=True)
+st.checkbox("Argumenta sólidamente la importancia del respeto a otras creencias desde los valores cristianos (Nivel 3).", value=False, disabled=True)
+st.checkbox("Propone acciones prácticas y viables para la convivencia interreligiosa (Nivel 3).", value=False, disabled=True)
+
+st.markdown("---")
+
 if st.button("Generar mi Evidencia en Word"):
     if not nombre.strip() or seccion == "":
         st.error("⚠️ Por favor, ingresa tu nombre y selecciona tu sección para poder identificarte.")
@@ -114,17 +129,53 @@ if st.button("Generar mi Evidencia en Word"):
         
     else:
         doc = Document()
+        
         doc.add_heading('FICHA DE RELIGIÓN – SESIÓN 1° AÑO', level=1)
         doc.add_paragraph(f'Estudiante: {nombre} | Sección: {seccion} | Fecha: {fecha}')
+        if tiempo_agotado:
+            doc.add_paragraph('[Entregado al finalizar el tiempo reglamentario]').bold = True
         doc.add_paragraph('---')
-        doc.add_heading('NIVEL 1', level=2)
-        doc.add_paragraph(f'1) Monoteísmo: {q1}\n2) Abraham: {q2}\n3) Valores: {q3_1}, {q3_2}\n4) Regla: {q4}')
-        doc.add_heading('NIVEL 2', level=2)
-        doc.add_paragraph(f'5) Semejanzas: {q5_1}, {q5_2}\n6) Prejuicio: {q6}')
-        doc.add_heading('NIVEL 3', level=2)
-        doc.add_paragraph(f'7) Respeto: {q7}\n8) Acciones: 1) {q8_1} | 2) {q8_2} | 3) {q8_3}')
+        
+        doc.add_heading('NIVEL 1 (FÁCIL)', level=2)
+        p1 = doc.add_paragraph()
+        p1.add_run('1) Significado de monoteísmo:\n').bold = True
+        p1.add_run(f'• {q1}\n\n')
+        p1.add_run('2) Importancia de Abraham:\n').bold = True
+        p1.add_run(f'• {q2}\n\n')
+        p1.add_run('3) Valores aprendidos de Abraham:\n').bold = True
+        p1.add_run(f'• {q3_1}\n• {q3_2}\n\n')
+        p1.add_run('4) Regla de oro para el diálogo respetuoso:\n').bold = True
+        p1.add_run(f'• {q4}')
+        
+        doc.add_heading('NIVEL 2 (MEDIO)', level=2)
+        p2 = doc.add_paragraph()
+        p2.add_run('5) Semejanzas entre Judaísmo y Cristianismo:\n').bold = True
+        p2.add_run(f'• {q5_1}\n• {q5_2}\n\n')
+        p2.add_run('6) Prejuicio a evitar en el salón:\n').bold = True
+        p2.add_run(f'• {q6}')
+        
+        doc.add_heading('NIVEL 3 (DIFÍCIL)', level=2)
+        p3 = doc.add_paragraph()
+        p3.add_run('7) Reflexión sobre el respeto en los valores cristianos:\n').bold = True
+        p3.add_run(f'• {q7}\n\n')
+        p3.add_run('8) Acciones prácticas para mejorar la convivencia:\n').bold = True
+        p3.add_run(f'• {q8_1}\n• {q8_2}\n• {q8_3}')
 
-        if tiempo_agotado: doc.add_paragraph('\n[Entregado al finalizar el tiempo reglamentario]')
+        doc.add_heading('Valoración de la Actividad', level=2)
+        p4 = doc.add_paragraph()
+        p4.add_run('Funcionalidad de la ficha digital: ').bold = True
+        p4.add_run(f'{val_funcional} estrellas\n')
+        p4.add_run('Interés en el tema: ').bold = True
+        p4.add_run(f'{val_interes}')
+        
+        doc.add_page_break()
+        
+        doc.add_heading('Lista de Cotejo - Evaluación del Docente', level=2)
+        doc.add_paragraph('[ ] Reconoce el concepto de monoteísmo y la figura de Abraham adecuadamente (Nivel 1).')
+        doc.add_paragraph('[ ] Identifica de manera asertiva semejanzas entre el judaísmo y el cristianismo (Nivel 2).')
+        doc.add_paragraph('[ ] Argumenta sólidamente la importancia del respeto a otras creencias desde los valores cristianos (Nivel 3).')
+        doc.add_paragraph('[ ] Propone acciones prácticas y viables para la convivencia interreligiosa (Nivel 3).')
+        doc.add_paragraph('\nNota / Observaciones: ________________________________________________')
 
         bio = io.BytesIO()
         doc.save(bio)
@@ -132,4 +183,9 @@ if st.button("Generar mi Evidencia en Word"):
         if not tiempo_agotado: st.balloons()
 
         st.success("¡Tu archivo está listo para entregar!")
-        st.download_button("📥 Descargar .docx", data=bio.getvalue(), file_name=f"Ficha_Religion_1{seccion}_{nombre.replace(' ', '_')}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        st.download_button(
+            label="📥 Descargar Documento Final (.docx)", 
+            data=bio.getvalue(), 
+            file_name=f"Ficha_Religion_1{seccion}_{nombre.replace(' ', '_')}.docx", 
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
