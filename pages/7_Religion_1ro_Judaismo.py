@@ -2,6 +2,7 @@ import streamlit as st
 import time
 from docx import Document
 import io
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Ficha de Religión - El judaísmo", page_icon="📜", layout="centered")
 
@@ -25,24 +26,44 @@ segundos_restantes = (st.session_state.minutos_asignados_religion * 60) - segund
 tiempo_agotado = segundos_restantes <= 0
 bloquear_inputs = tiempo_agotado 
 
-# --- MENÚ LATERAL: RELOJ Y TIEMPO EXTRA ---
+# --- MENÚ LATERAL: RELOJ VISUAL EN TIEMPO REAL ---
 with st.sidebar:
     st.markdown("### ⏱️ Cronómetro de ficha")
     if not tiempo_agotado:
-        minutos = int(segundos_restantes // 60)
-        segundos = int(segundos_restantes % 60)
-        st.success(f"## {minutos:02d}:{segundos:02d}")
+        reloj_html = f"""
+        <div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px; text-align: center; border: 2px solid #e0e4eb;">
+            <h2 id="reloj" style="margin: 0; color: #2ecc71; font-family: monospace; font-size: 38px;">--:--</h2>
+        </div>
+        <script>
+            var tiempo = {int(segundos_restantes)};
+            var display = document.getElementById('reloj');
+            var intervalo = setInterval(function() {{
+                if (tiempo <= 0) {{
+                    clearInterval(intervalo);
+                    display.innerHTML = "00:00";
+                    display.style.color = "#e74c3c";
+                }} else {{
+                    var min = Math.floor(tiempo / 60).toString().padStart(2, '0');
+                    var sec = (tiempo % 60).toString().padStart(2, '0');
+                    display.innerHTML = min + ":" + sec;
+                    if (tiempo <= 300) display.style.color = "#f39c12"; // Amarillo
+                    if (tiempo <= 60) display.style.color = "#e74c3c"; // Rojo
+                    tiempo--;
+                }}
+            }}, 1000);
+        </script>
+        """
+        components.html(reloj_html, height=85)
         
-        if st.button("➕ Dar 4 min extra"):
+        if st.button("➕ Dar 4 min extra", use_container_width=True):
             st.session_state.minutos_asignados_religion += 4
             st.rerun()
-        
-        st.caption("Actualiza la página (F5) o interactúa con la ficha para ver el tiempo exacto.")
+        st.caption("El reloj avanza en tiempo real. Al llegar a cero, haz clic para bloquear y descargar tu avance.")
     else:
         st.error("## 00:00\n⚠️ TIEMPO AGOTADO")
         st.write("Tu ficha ha sido bloqueada. Por favor, descarga tu avance en la parte inferior.")
         
-        if st.button("🔓 Desbloquear (Dar 4 min)"):
+        if st.button("🔓 Desbloquear (Dar 4 min extra)", use_container_width=True):
             st.session_state.minutos_asignados_religion += 4
             st.rerun()
 # --------------------------------------
@@ -100,13 +121,11 @@ q8_2 = st.text_input("Acción 2:", disabled=bloquear_inputs)
 q8_3 = st.text_input("Acción 3:", disabled=bloquear_inputs)
 
 st.markdown("---")
-# --- VALORACIÓN DEL ESTUDIANTE ---
 st.subheader("📊 Valoración de la Actividad")
 val_funcional = st.slider("1. ¿Qué tan fácil y funcional te pareció usar esta ficha digital?", 1, 5, 5, disabled=bloquear_inputs)
 val_interes = st.radio("2. ¿El tema y las actividades te parecieron interesantes?", ["Sí, mucho", "Estuvo bien", "No mucho", "Nada interesante"], horizontal=True, disabled=bloquear_inputs)
 
 st.markdown("---")
-# --- LISTA DE COTEJO PARA EL DOCENTE ---
 st.subheader("📋 Lista de Cotejo (Uso exclusivo del docente)")
 st.caption("Estos son los criterios con los que tu profesor evaluará esta ficha:")
 st.checkbox("Reconoce el concepto de monoteísmo y la figura de Abraham adecuadamente (Nivel 1).", value=False, disabled=True)
@@ -119,17 +138,14 @@ st.markdown("---")
 if st.button("Generar mi Evidencia en Word"):
     if not nombre.strip() or seccion == "":
         st.error("⚠️ Por favor, ingresa tu nombre y selecciona tu sección para poder identificarte.")
-        
     elif not tiempo_agotado and (
         not q1.strip() or not q3_1.strip() or not q3_2.strip() or not q4.strip() or
         not q5_1.strip() or not q5_2.strip() or not q6.strip() or
         not q7.strip() or not q8_1.strip() or not q8_2.strip() or not q8_3.strip()
     ):
         st.error("⚠️ Aún tienes tiempo. Debes completar las preguntas de **TODOS LOS NIVELES (1, 2 y 3)** antes de descargar tu evidencia.")
-        
     else:
         doc = Document()
-        
         doc.add_heading('FICHA DE RELIGIÓN – SESIÓN 1° AÑO', level=1)
         doc.add_paragraph(f'Estudiante: {nombre} | Sección: {seccion} | Fecha: {fecha}')
         if tiempo_agotado:
@@ -169,7 +185,6 @@ if st.button("Generar mi Evidencia en Word"):
         p4.add_run(f'{val_interes}')
         
         doc.add_page_break()
-        
         doc.add_heading('Lista de Cotejo - Evaluación del Docente', level=2)
         doc.add_paragraph('[ ] Reconoce el concepto de monoteísmo y la figura de Abraham adecuadamente (Nivel 1).')
         doc.add_paragraph('[ ] Identifica de manera asertiva semejanzas entre el judaísmo y el cristianismo (Nivel 2).')
@@ -181,11 +196,5 @@ if st.button("Generar mi Evidencia en Word"):
         doc.save(bio)
 
         if not tiempo_agotado: st.balloons()
-
         st.success("¡Tu archivo está listo para entregar!")
-        st.download_button(
-            label="📥 Descargar Documento Final (.docx)", 
-            data=bio.getvalue(), 
-            file_name=f"Ficha_Religion_1{seccion}_{nombre.replace(' ', '_')}.docx", 
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        )
+        st.download_button(label="📥 Descargar Documento Final (.docx)", data=bio.getvalue(), file_name=f"Ficha_Religion_1{seccion}_{nombre.replace(' ', '_')}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
