@@ -5,11 +5,24 @@ import io
 
 st.set_page_config(page_title="Ficha Cívica - Salud Pública", page_icon="⚖️", layout="centered")
 
-# --- SISTEMA DE TIEMPO INTELIGENTE ---
-if 'inicio_tiempo_civica' not in st.session_state:
-    st.session_state.inicio_tiempo_civica = time.time()
-    st.session_state.minutos_asignados_civica = 20
+# --- SISTEMA DE TIEMPO INTELIGENTE Y BOTÓN GO ---
+# 1. Verificar si el alumno ya presionó "Empezar"
+if 'ficha_iniciada_civica' not in st.session_state:
+    st.session_state.ficha_iniciada_civica = False
 
+# 2. PANTALLA DE ESPERA (Botón GO)
+if not st.session_state.ficha_iniciada_civica:
+    st.info("👋 ¡Hola! Tienes 20 minutos para resolver esta ficha. El tiempo comenzará a correr cuando presiones el botón de abajo.")
+    col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
+    with col_btn2:
+        if st.button("🚀 ESTOY LISTO: INICIAR FICHA (GO)", use_container_width=True):
+            st.session_state.ficha_iniciada_civica = True
+            st.session_state.inicio_tiempo_civica = time.time()
+            st.session_state.minutos_asignados_civica = 20
+            st.rerun()
+    st.stop() # Esto oculta todo el resto de la página hasta que presionen el botón
+
+# 3. Lógica del cronómetro (Una vez que ya iniciaron)
 segundos_transcurridos = time.time() - st.session_state.inicio_tiempo_civica
 segundos_restantes = (st.session_state.minutos_asignados_civica * 60) - segundos_transcurridos
 tiempo_agotado = segundos_restantes <= 0
@@ -17,6 +30,26 @@ bloquear_inputs = tiempo_agotado
 
 # --- MENÚ LATERAL: RELOJ Y TIEMPO EXTRA ---
 with st.sidebar:
+    st.markdown("### ⏱️ Cronómetro de ficha")
+    if not tiempo_agotado:
+        minutos = int(segundos_restantes // 60)
+        segundos = int(segundos_restantes % 60)
+        st.success(f"## {minutos:02d}:{segundos:02d}")
+        
+        if st.button("➕ Dar 4 min extra"):
+            st.session_state.minutos_asignados_civica += 4
+            st.rerun()
+        
+        st.caption("Actualiza la página (F5) o interactúa con la ficha para ver el tiempo exacto.")
+    else:
+        st.error("## 00:00")
+        st.error("⚠️ TIEMPO AGOTADO")
+        st.write("Tu ficha ha sido bloqueada. Por favor, descarga tu avance en la parte inferior.")
+        
+        if st.button("🔓 Desbloquear (Dar 4 min extra)"):
+            st.session_state.minutos_asignados_civica += 4
+            st.rerun()
+# --------------------------------------
     st.markdown("### ⏱️ Cronómetro de ficha")
     if not tiempo_agotado:
         minutos = int(segundos_restantes // 60)
