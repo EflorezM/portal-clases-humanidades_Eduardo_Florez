@@ -2,6 +2,7 @@ import streamlit as st
 import time
 from docx import Document
 import io
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Ficha PFRH - Emociones", page_icon="🧠", layout="centered")
 
@@ -25,24 +26,44 @@ segundos_restantes = (st.session_state.minutos_asignados_pfrh * 60) - segundos_t
 tiempo_agotado = segundos_restantes <= 0
 bloquear_inputs = tiempo_agotado 
 
-# --- MENÚ LATERAL: RELOJ Y TIEMPO EXTRA ---
+# --- MENÚ LATERAL: RELOJ VISUAL EN TIEMPO REAL ---
 with st.sidebar:
     st.markdown("### ⏱️ Cronómetro de ficha")
     if not tiempo_agotado:
-        minutos = int(segundos_restantes // 60)
-        segundos = int(segundos_restantes % 60)
-        st.success(f"## {minutos:02d}:{segundos:02d}")
+        reloj_html = f"""
+        <div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px; text-align: center; border: 2px solid #e0e4eb;">
+            <h2 id="reloj" style="margin: 0; color: #2ecc71; font-family: monospace; font-size: 38px;">--:--</h2>
+        </div>
+        <script>
+            var tiempo = {int(segundos_restantes)};
+            var display = document.getElementById('reloj');
+            var intervalo = setInterval(function() {{
+                if (tiempo <= 0) {{
+                    clearInterval(intervalo);
+                    display.innerHTML = "00:00";
+                    display.style.color = "#e74c3c";
+                }} else {{
+                    var min = Math.floor(tiempo / 60).toString().padStart(2, '0');
+                    var sec = (tiempo % 60).toString().padStart(2, '0');
+                    display.innerHTML = min + ":" + sec;
+                    if (tiempo <= 300) display.style.color = "#f39c12"; // Amarillo
+                    if (tiempo <= 60) display.style.color = "#e74c3c"; // Rojo
+                    tiempo--;
+                }}
+            }}, 1000);
+        </script>
+        """
+        components.html(reloj_html, height=85)
         
-        if st.button("➕ Dar 4 min extra"):
+        if st.button("➕ Dar 4 min extra", use_container_width=True):
             st.session_state.minutos_asignados_pfrh += 4
             st.rerun()
-        
-        st.caption("Actualiza la página (F5) o interactúa con la ficha para ver el tiempo exacto.")
+        st.caption("El reloj avanza en tiempo real. Al llegar a cero, haz clic para bloquear y descargar tu avance.")
     else:
         st.error("## 00:00\n⚠️ TIEMPO AGOTADO")
         st.write("Tu ficha ha sido bloqueada. Por favor, descarga tu avance en la parte inferior.")
         
-        if st.button("🔓 Desbloquear (Dar 4 min)"):
+        if st.button("🔓 Desbloquear (Dar 4 min extra)", use_container_width=True):
             st.session_state.minutos_asignados_pfrh += 4
             st.rerun()
 # --------------------------------------
@@ -70,14 +91,14 @@ except FileNotFoundError:
 
 st.markdown("---")
 st.subheader("NIVEL 1 (FÁCIL) – PARA TODOS")
-q1 = st.selectbox("1) Haz una pausa y reflexiona: ¿Cuál de estas emociones describe mejor cómo te sientes el día de hoy?", ["", "alegría", "enojo", "tristeza", "miedo", "vergüenza", "calma"], disabled=bloquear_inputs)
+q1 = st.selectbox("1) Haz una pausa y reflexiona: ¿Cuál de estas emociones describe mejor cómo te sientes hoy?", ["", "alegría", "enojo", "tristeza", "miedo", "vergüenza", "calma"], disabled=bloquear_inputs)
 q2 = st.text_input("2) Observa tus reacciones físicas. Completa la frase: Cuando siento enojo o frustración, noto que mi cuerpo...", disabled=bloquear_inputs)
-q3 = st.text_area("3) Identifica el pensamiento: Escribe un pensamiento frecuente que suele aparecer en tu mente cuando experimentas enojo (recuerda no usar nombres reales de otras personas):", disabled=bloquear_inputs)
-q4 = st.text_area("4) Busca una salida sana: Escribe una forma respetuosa y asertiva en la que podrías expresar o canalizar esa emoción sin lastimar a nadie:", disabled=bloquear_inputs)
+q3 = st.text_area("3) Identifica el pensamiento: Escribe un pensamiento frecuente que suele aparecer en tu mente cuando experimentas enojo:", disabled=bloquear_inputs)
+q4 = st.text_area("4) Busca una salida sana: Escribe una forma respetuosa y asertiva en la que podrías expresar esa emoción:", disabled=bloquear_inputs)
 
 st.markdown("---")
 st.subheader("NIVEL 2 (MEDIO) – RETO 1")
-st.write("5) Analiza el siguiente caso: Le escribes un mensaje importante a un amigo y te deja 'en visto' sin responder. Completa los espacios identificando qué emoción sentirías, qué pensarías y cuál sería tu respuesta:")
+st.write("5) Analiza el siguiente caso: Le escribes un mensaje importante a un amigo y te deja 'en visto'. Completa los espacios:")
 col_c1, col_c2, col_c3 = st.columns(3)
 with col_c1: q5_emo = st.text_input("¿Qué emoción sentirías?:", disabled=bloquear_inputs)
 with col_c2: q5_pen = st.text_input("¿Qué pensamiento cruzaría tu mente?:", disabled=bloquear_inputs)
@@ -85,19 +106,17 @@ with col_c3: q5_res = st.text_input("¿Cuál sería una respuesta respetuosa?:",
 
 st.markdown("---")
 st.subheader("NIVEL 3 (DIFÍCIL) – RETO 2")
-q6 = st.text_area("6) Reflexiona profundo (5 líneas): ¿Cuáles crees que son las consecuencias emocionales y sociales si te guardas todo lo que sientes y terminas 'explotando' impulsivamente en tus redes sociales?", disabled=bloquear_inputs)
-st.write("7) Crea dos frases cortas y positivas de 'autocuidado' emocional que podrías repetirte a ti mismo/a en momentos de mucho estrés o tristeza:")
+q6 = st.text_area("6) Reflexiona profundo (5 líneas): ¿Cuáles crees que son las consecuencias si te guardas todo lo que sientes y terminas explotando en redes?", disabled=bloquear_inputs)
+st.write("7) Crea dos frases cortas y positivas de 'autocuidado' emocional que podrías repetirte en momentos de mucho estrés:")
 q7_1 = st.text_input("Frase de autocuidado 1:", disabled=bloquear_inputs)
 q7_2 = st.text_input("Frase de autocuidado 2:", disabled=bloquear_inputs)
 
 st.markdown("---")
-# --- VALORACIÓN DEL ESTUDIANTE ---
 st.subheader("📊 Valoración de la Actividad")
 val_funcional = st.slider("1. ¿Qué tan fácil y funcional te pareció usar esta ficha digital?", 1, 5, 5, disabled=bloquear_inputs)
 val_interes = st.radio("2. ¿El tema y las actividades te parecieron interesantes?", ["Sí, mucho", "Estuvo bien", "No mucho", "Nada interesante"], horizontal=True, disabled=bloquear_inputs)
 
 st.markdown("---")
-# --- LISTA DE COTEJO PARA EL DOCENTE ---
 st.subheader("📋 Lista de Cotejo (Uso exclusivo del docente)")
 st.caption("Estos son los criterios con los que tu profesor evaluará esta ficha:")
 st.checkbox("Identifica correctamente sus emociones y reacciones físicas (Nivel 1).", value=False, disabled=True)
@@ -110,17 +129,14 @@ st.markdown("---")
 if st.button("Generar mi Evidencia en Word"):
     if not nombre.strip() or seccion == "":
         st.error("⚠️ Por favor, ingresa tu nombre y selecciona tu sección para poder identificarte.")
-        
     elif not tiempo_agotado and (
         q1 == "" or not q2.strip() or not q3.strip() or not q4.strip() or
         not q5_emo.strip() or not q5_pen.strip() or not q5_res.strip() or
         not q6.strip() or not q7_1.strip() or not q7_2.strip()
     ):
         st.error("⚠️ Aún tienes tiempo. Debes completar las preguntas de **TODOS LOS NIVELES (1, 2 y 3)** antes de descargar tu evidencia.")
-        
     else:
         doc = Document()
-        
         doc.add_heading('FICHA DE PFRH – SESIÓN 3° AÑO', level=1)
         doc.add_paragraph(f'Estudiante: {nombre} | Sección: {seccion} | Fecha: {fecha}')
         if tiempo_agotado:
@@ -141,9 +157,7 @@ if st.button("Generar mi Evidencia en Word"):
         doc.add_heading('NIVEL 2 (MEDIO)', level=2)
         p2 = doc.add_paragraph()
         p2.add_run('5) Caso "Me dejan en visto":\n').bold = True
-        p2.add_run(f'• Emoción: {q5_emo}\n')
-        p2.add_run(f'• Pensamiento: {q5_pen}\n')
-        p2.add_run(f'• Respuesta: {q5_res}')
+        p2.add_run(f'• Emoción: {q5_emo}\n• Pensamiento: {q5_pen}\n• Respuesta: {q5_res}')
         
         doc.add_heading('NIVEL 3 (DIFÍCIL)', level=2)
         p3 = doc.add_paragraph()
@@ -160,7 +174,6 @@ if st.button("Generar mi Evidencia en Word"):
         p4.add_run(f'{val_interes}')
         
         doc.add_page_break()
-        
         doc.add_heading('Lista de Cotejo - Evaluación del Docente', level=2)
         doc.add_paragraph('[ ] Identifica correctamente sus emociones y reacciones físicas (Nivel 1).')
         doc.add_paragraph('[ ] Relaciona asertivamente emoción, pensamiento y respuesta en un caso cotidiano (Nivel 2).')
@@ -172,11 +185,5 @@ if st.button("Generar mi Evidencia en Word"):
         doc.save(bio)
         
         if not tiempo_agotado: st.balloons()
-            
         st.success("¡Tu archivo está listo para entregar!")
-        st.download_button(
-            label="📥 Descargar Documento Final (.docx)", 
-            data=bio.getvalue(), 
-            file_name=f"Ficha_PFRH_3{seccion}_{nombre.replace(' ', '_')}.docx", 
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        )
+        st.download_button(label="📥 Descargar Documento Final (.docx)", data=bio.getvalue(), file_name=f"Ficha_PFRH_3{seccion}_{nombre.replace(' ', '_')}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
