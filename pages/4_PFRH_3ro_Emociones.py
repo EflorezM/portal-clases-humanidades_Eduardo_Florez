@@ -5,10 +5,20 @@ import io
 
 st.set_page_config(page_title="Ficha PFRH - Emociones", page_icon="🧠", layout="centered")
 
-# --- SISTEMA DE TIEMPO INTELIGENTE ---
-if 'inicio_tiempo_pfrh' not in st.session_state:
-    st.session_state.inicio_tiempo_pfrh = time.time()
-    st.session_state.minutos_asignados_pfrh = 20
+# --- SISTEMA DE TIEMPO INTELIGENTE Y BOTÓN GO ---
+if 'ficha_iniciada_pfrh' not in st.session_state:
+    st.session_state.ficha_iniciada_pfrh = False
+
+if not st.session_state.ficha_iniciada_pfrh:
+    st.info("👋 ¡Hola! Tienes 20 minutos para resolver esta ficha. El tiempo comenzará a correr cuando presiones el botón de abajo.")
+    col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
+    with col_btn2:
+        if st.button("🚀 ESTOY LISTO: INICIAR FICHA (GO)", use_container_width=True):
+            st.session_state.ficha_iniciada_pfrh = True
+            st.session_state.inicio_tiempo_pfrh = time.time()
+            st.session_state.minutos_asignados_pfrh = 20
+            st.rerun()
+    st.stop()
 
 segundos_transcurridos = time.time() - st.session_state.inicio_tiempo_pfrh
 segundos_restantes = (st.session_state.minutos_asignados_pfrh * 60) - segundos_transcurridos
@@ -33,7 +43,7 @@ with st.sidebar:
         st.error("⚠️ TIEMPO AGOTADO")
         st.write("Tu ficha ha sido bloqueada. Por favor, descarga tu avance en la parte inferior.")
         
-        if st.button("🔓 Desbloquear (Dar 4 min)"):
+        if st.button("🔓 Desbloquear (Dar 4 min extra)"):
             st.session_state.minutos_asignados_pfrh += 4
             st.rerun()
 # --------------------------------------
@@ -77,7 +87,6 @@ with col_c3: q5_res = st.text_input("¿Cuál sería una respuesta respetuosa?:",
 st.markdown("---")
 st.subheader("NIVEL 3 (DIFÍCIL) – RETO 2")
 q6 = st.text_area("6) Reflexiona profundo (5 líneas): ¿Cuáles crees que son las consecuencias emocionales y sociales si te guardas todo lo que sientes y terminas 'explotando' impulsivamente en tus redes sociales?", disabled=bloquear_inputs)
-
 st.write("7) Crea dos frases cortas y positivas de 'autocuidado' emocional que podrías repetirte a ti mismo/a en momentos de mucho estrés o tristeza:")
 q7_1 = st.text_input("Frase de autocuidado 1:", disabled=bloquear_inputs)
 q7_2 = st.text_input("Frase de autocuidado 2:", disabled=bloquear_inputs)
