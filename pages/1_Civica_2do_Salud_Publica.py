@@ -6,23 +6,20 @@ import io
 st.set_page_config(page_title="Ficha Cívica - Salud Pública", page_icon="⚖️", layout="centered")
 
 # --- SISTEMA DE TIEMPO INTELIGENTE Y BOTÓN GO ---
-# 1. Verificar si el alumno ya presionó "Empezar"
 if 'ficha_iniciada_civica' not in st.session_state:
     st.session_state.ficha_iniciada_civica = False
 
-# 2. PANTALLA DE ESPERA (Botón GO)
 if not st.session_state.ficha_iniciada_civica:
     st.info("👋 ¡Hola! Tienes 20 minutos para resolver esta ficha. El tiempo comenzará a correr cuando presiones el botón de abajo.")
     col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
     with col_btn2:
-        if st.button("🚀 ESTOY LISTO: INICIAR FICHA (GO)", use_container_width=True):
+        if st.button("🚀 ESTOY LISTO: INICIAR FICHA", use_container_width=True):
             st.session_state.ficha_iniciada_civica = True
             st.session_state.inicio_tiempo_civica = time.time()
             st.session_state.minutos_asignados_civica = 20
             st.rerun()
-    st.stop() # Esto oculta todo el resto de la página hasta que presionen el botón
+    st.stop()
 
-# 3. Lógica del cronómetro (Una vez que ya iniciaron)
 segundos_transcurridos = time.time() - st.session_state.inicio_tiempo_civica
 segundos_restantes = (st.session_state.minutos_asignados_civica * 60) - segundos_transcurridos
 tiempo_agotado = segundos_restantes <= 0
@@ -42,28 +39,7 @@ with st.sidebar:
         
         st.caption("Actualiza la página (F5) o interactúa con la ficha para ver el tiempo exacto.")
     else:
-        st.error("## 00:00")
-        st.error("⚠️ TIEMPO AGOTADO")
-        st.write("Tu ficha ha sido bloqueada. Por favor, descarga tu avance en la parte inferior.")
-        
-        if st.button("🔓 Desbloquear (Dar 4 min extra)"):
-            st.session_state.minutos_asignados_civica += 4
-            st.rerun()
-# --------------------------------------
-    st.markdown("### ⏱️ Cronómetro de ficha")
-    if not tiempo_agotado:
-        minutos = int(segundos_restantes // 60)
-        segundos = int(segundos_restantes % 60)
-        st.success(f"## {minutos:02d}:{segundos:02d}")
-        
-        if st.button("➕ Dar 4 min extra"):
-            st.session_state.minutos_asignados_civica += 4
-            st.rerun()
-        
-        st.caption("Actualiza la página (F5) o interactúa con la ficha para ver el tiempo exacto.")
-    else:
-        st.error("## 00:00")
-        st.error("⚠️ TIEMPO AGOTADO")
+        st.error("## 00:00\n⚠️ TIEMPO AGOTADO")
         st.write("Tu ficha ha sido bloqueada. Por favor, descarga tu avance en la parte inferior.")
         
         if st.button("🔓 Desbloquear (Dar 4 min)"):
@@ -96,38 +72,53 @@ st.markdown("---")
 st.subheader("NIVEL 1 (FÁCIL) – PARA TODOS")
 st.write("Empecemos identificando acciones cotidianas que protegen nuestra comunidad.")
 col_n1a, col_n1b = st.columns(2)
-with col_n1a: q1_1 = st.text_input("1.1) Menciona una primera acción concreta de prevención:", disabled=bloquear_inputs)
-with col_n1b: q1_2 = st.text_input("1.2) Menciona una segunda acción de prevención:", disabled=bloquear_inputs)
+with col_n1a: q1_1 = st.text_input("1.1) Primera acción concreta de prevención:", disabled=bloquear_inputs)
+with col_n1b: q1_2 = st.text_input("1.2) Segunda acción de prevención:", disabled=bloquear_inputs)
 
-q2 = st.text_input("2) Completa la frase: Si una persona difunde información falsa sobre temas de salud, esto puede ocasionar que...", disabled=bloquear_inputs)
-q3 = st.radio("3) Marca la opción correcta. Antes de compartir una noticia sobre salud en mis redes sociales, lo primero que debo hacer es:", ["verificar si la fuente es confiable", "reenviar rápidamente sin leer", "insultar a quien lo publicó"], horizontal=True, disabled=bloquear_inputs)
+q2 = text_input_2 = st.text_input("2) Completa: Si una persona difunde información falsa sobre temas de salud, esto puede ocasionar que...", disabled=bloquear_inputs)
+q3 = st.radio("3) Antes de compartir una noticia sobre salud en mis redes sociales, lo primero que debo hacer es:", ["verificar si la fuente es confiable", "reenviar rápidamente sin leer", "insultar a quien lo publicó"], horizontal=True, disabled=bloquear_inputs)
 q4 = st.text_input("4) Escribe un compromiso personal que puedas aplicar dentro del aula para mantener una buena salud grupal:", disabled=bloquear_inputs)
 
 st.markdown("---")
 st.subheader("NIVEL 2 (MEDIO) – RETO 1")
-st.write("5) Lee el siguiente caso: Ves una publicación en redes que dice 'Las vacunas hacen daño' pero no muestra ninguna fuente científica ni prueba. Escribe dos preguntas críticas que te harías para verificar si esa información es falsa:")
+st.write("5) Lee el siguiente caso: Ves una publicación en redes que dice 'Las vacunas hacen daño' pero no muestra ninguna fuente científica. Escribe dos preguntas críticas que te harías para verificar si esa información es falsa:")
 q5_1 = st.text_input("Pregunta crítica 1:", disabled=bloquear_inputs)
 q5_2 = st.text_input("Pregunta crítica 2:", disabled=bloquear_inputs)
 
-st.write("6) Escribe dos normas o reglas de oro que todos deberíamos seguir antes de compartir información de salud en internet:")
+st.write("6) Escribe dos reglas de oro que todos deberíamos seguir antes de compartir información de salud:")
 q6_1 = st.text_input("Regla de oro 1:", disabled=bloquear_inputs)
 q6_2 = st.text_input("Regla de oro 2:", disabled=bloquear_inputs)
 
 st.markdown("---")
 st.subheader("NIVEL 3 (DIFÍCIL) – RETO 2")
 st.write("7) Imagina que eres el líder de una campaña de salud escolar. Crea un mensaje corto y llamativo (máximo 2 líneas) para animar a tus compañeros a prevenir enfermedades:")
-q7 = text_area_1 = st.text_area("Mensaje de campaña:", disabled=bloquear_inputs)
+q7 = st.text_area("Mensaje de campaña:", disabled=bloquear_inputs)
 
 st.write("8) Redacta un párrafo corto (aprox. 5 líneas) explicando con tus propias palabras: ¿Por qué crees que informarnos responsablemente es una forma de proteger nuestra vida y la de los demás?")
 q8 = st.text_area("Tu reflexión:", disabled=bloquear_inputs)
 
 st.markdown("---")
+# --- VALORACIÓN DEL ESTUDIANTE ---
+st.subheader("📊 Valoración de la Actividad")
+val_funcional = st.slider("1. ¿Qué tan fácil y funcional te pareció usar esta ficha digital?", 1, 5, 5, disabled=bloquear_inputs)
+val_interes = st.radio("2. ¿El tema y las actividades te parecieron interesantes?", ["Sí, mucho", "Estuvo bien", "No mucho", "Nada interesante"], horizontal=True, disabled=bloquear_inputs)
 
+st.markdown("---")
+# --- LISTA DE COTEJO PARA EL DOCENTE (BLOQUEADA PARA EL ALUMNO) ---
+st.subheader("📋 Lista de Cotejo (Uso exclusivo del docente)")
+st.caption("Estos son los criterios con los que tu profesor evaluará esta ficha:")
+st.checkbox("Identifica y describe correctamente dos acciones prácticas de prevención (Nivel 1).", value=False, disabled=True)
+st.checkbox("Analiza críticamente información de salud formulando preguntas pertinentes (Nivel 2).", value=False, disabled=True)
+st.checkbox("Propone normas claras y responsables para compartir información en redes (Nivel 2).", value=False, disabled=True)
+st.checkbox("Redacta un mensaje de campaña claro y argumenta sólidamente su reflexión final (Nivel 3).", value=False, disabled=True)
+
+st.markdown("---")
+
+# --- GENERACIÓN DEL DOCUMENTO WORD FORMATEADO ---
 if st.button("Generar mi Evidencia en Word"):
     if not nombre.strip() or seccion == "":
         st.error("⚠️ Por favor, ingresa tu nombre y selecciona tu sección para poder identificarte.")
-    
-    # Exige Nivel 1, 2 y 3 si hay tiempo
+        
     elif not tiempo_agotado and (
         not q1_1.strip() or not q1_2.strip() or not q2.strip() or not q4.strip() or 
         not q5_1.strip() or not q5_2.strip() or not q6_1.strip() or not q6_2.strip() or
@@ -137,22 +128,70 @@ if st.button("Generar mi Evidencia en Word"):
         
     else:
         doc = Document()
+        
+        # Título y Encabezado
         doc.add_heading('FICHA DE CÍVICA – SESIÓN 2° AÑO', level=1)
         doc.add_paragraph(f'Estudiante: {nombre} | Sección: {seccion} | Fecha: {fecha}')
+        if tiempo_agotado:
+            doc.add_paragraph('[Entregado al finalizar el tiempo reglamentario]').bold = True
         doc.add_paragraph('---')
-        doc.add_heading('NIVEL 1', level=2)
-        doc.add_paragraph(f'1) Prevención: {q1_1}, {q1_2}\n2) Info falsa: {q2}\n3) Compartir: {q3}\n4) Compromiso: {q4}')
-        doc.add_heading('NIVEL 2', level=2)
-        doc.add_paragraph(f'5) Caso vacunas: {q5_1}, {q5_2}\n6) Normas: {q6_1}, {q6_2}')
-        doc.add_heading('NIVEL 3', level=2)
-        doc.add_paragraph(f'7) Campaña: {q7}\n8) Info responsable: {q8}')
         
-        if tiempo_agotado: doc.add_paragraph('\n[Entregado al finalizar el tiempo reglamentario]')
-            
+        # NIVEL 1 Formateado
+        doc.add_heading('NIVEL 1 (FÁCIL)', level=2)
+        p1 = doc.add_paragraph()
+        p1.add_run('1) Acciones de prevención:\n').bold = True
+        p1.add_run(f'• {q1_1}\n• {q1_2}\n\n')
+        p1.add_run('2) Difundir información falsa puede:\n').bold = True
+        p1.add_run(f'• {q2}\n\n')
+        p1.add_run('3) Antes de compartir una noticia debo:\n').bold = True
+        p1.add_run(f'• {q3}\n\n')
+        p1.add_run('4) Compromiso de salud en el aula:\n').bold = True
+        p1.add_run(f'• {q4}')
+        
+        # NIVEL 2 Formateado
+        doc.add_heading('NIVEL 2 (MEDIO)', level=2)
+        p2 = doc.add_paragraph()
+        p2.add_run('5) Preguntas críticas (Caso Vacunas):\n').bold = True
+        p2.add_run(f'• {q5_1}\n• {q5_2}\n\n')
+        p2.add_run('6) Reglas de oro para compartir información:\n').bold = True
+        p2.add_run(f'• {q6_1}\n• {q6_2}')
+        
+        # NIVEL 3 Formateado
+        doc.add_heading('NIVEL 3 (DIFÍCIL)', level=2)
+        p3 = doc.add_paragraph()
+        p3.add_run('7) Mensaje de campaña:\n').bold = True
+        p3.add_run(f'• {q7}\n\n')
+        p3.add_run('8) Reflexión sobre la información responsable:\n').bold = True
+        p3.add_run(f'• {q8}')
+        
+        # VALORACIÓN DEL ESTUDIANTE
+        doc.add_heading('Valoración de la Actividad', level=2)
+        p4 = doc.add_paragraph()
+        p4.add_run('Funcionalidad de la ficha digital (1 a 5): ').bold = True
+        p4.add_run(f'{val_funcional} estrellas\n')
+        p4.add_run('Interés en el tema: ').bold = True
+        p4.add_run(f'{val_interes}')
+        
+        doc.add_page_break() # Salto de página para uso exclusivo del docente
+        
+        # LISTA DE COTEJO PARA EL PROFESOR
+        doc.add_heading('Lista de Cotejo - Evaluación del Docente', level=2)
+        doc.add_paragraph('[ ] Identifica y describe correctamente dos acciones prácticas de prevención (Nivel 1).')
+        doc.add_paragraph('[ ] Analiza críticamente información de salud formulando preguntas pertinentes (Nivel 2).')
+        doc.add_paragraph('[ ] Propone normas claras y responsables para compartir información en redes (Nivel 2).')
+        doc.add_paragraph('[ ] Redacta un mensaje de campaña claro y argumenta sólidamente su reflexión final (Nivel 3).')
+        doc.add_paragraph('\nNota / Observaciones: ________________________________________________')
+
         bio = io.BytesIO()
         doc.save(bio)
         
-        if not tiempo_agotado: st.balloons()
+        if not tiempo_agotado: 
+            st.balloons()
             
         st.success("¡Tu archivo está listo para entregar!")
-        st.download_button("📥 Descargar .docx", data=bio.getvalue(), file_name=f"Ficha_Civica_2{seccion}_{nombre.replace(' ', '_')}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        st.download_button(
+            label="📥 Descargar Documento Final (.docx)", 
+            data=bio.getvalue(), 
+            file_name=f"Ficha_Civica_2{seccion}_{nombre.replace(' ', '_')}.docx", 
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
